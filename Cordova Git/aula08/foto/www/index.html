@@ -1,50 +1,101 @@
 <!DOCTYPE html>
-<!--
-    Licensed to the Apache Software Foundation (ASF) under one
-    or more contributor license agreements.  See the NOTICE file
-    distributed with this work for additional information
-    regarding copyright ownership.  The ASF licenses this file
-    to you under the Apache License, Version 2.0 (the
-    "License"); you may not use this file except in compliance
-    with the License.  You may obtain a copy of the License at
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Foto e Localização</title>
+</head>
+<body>
+    <h1>Tirar Foto e Exibir Localização</h1>
 
-    http://www.apache.org/licenses/LICENSE-2.0
+    <!-- Seção para vídeo e captura da foto -->
+    <video id="video" width="320" height="240" autoplay></video>
+    <br>
+    <button id="snap">Tirar Foto</button>
+    <canvas id="canvas" width="320" height="240" style="display: none;"></canvas>
+    <br>
+    
+    <!-- Exibir a última foto tirada -->
+    <h3>Última Foto Tirada:</h3>
+    <img id="fotoSalva" width="320" height="240" style="border: 1px solid black;">
+    <br><br>
 
-    Unless required by applicable law or agreed to in writing,
-    software distributed under the License is distributed on an
-    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-     KIND, either express or implied.  See the License for the
-    specific language governing permissions and limitations
-    under the License.
--->
-<html>
-    <head>
-        <meta charset="utf-8">
-        <!--
-        Customize this policy to fit your own app's needs. For more guidance, please refer to the docs:
-            https://cordova.apache.org/docs/en/latest/
-        Some notes:
-            * https://ssl.gstatic.com is required only on Android and is needed for TalkBack to function properly
-            * Disables use of inline scripts in order to mitigate risk of XSS vulnerabilities. To change this:
-                * Enable inline JS: add 'unsafe-inline' to default-src
-        -->
-        <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: https://ssl.gstatic.com 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src *; img-src 'self' data: content:;">
-        <meta name="format-detection" content="telephone=no">
-        <meta name="msapplication-tap-highlight" content="no">
-        <meta name="viewport" content="initial-scale=1, width=device-width, viewport-fit=cover">
-        <meta name="color-scheme" content="light dark">
-        <link rel="stylesheet" href="css/index.css">
-        <title>Hello World</title>
-    </head>
-    <body>
-        <div class="app">
-            <h1>Apache Cordova</h1>
-            <div id="deviceready" class="blink">
-                <p class="event listening">Connecting to Device</p>
-                <p class="event received">Device is Ready</p>
-            </div>
-        </div>
-        <script src="cordova.js"></script>
-        <script src="js/index.js"></script>
-    </body>
+    <!-- Exibir o mapa da última localização -->
+    <h3>Localização da Foto:</h3>
+    <iframe id="mapa" width="425" height="350" style="border: 1px solid black;"></iframe>
+
+    <script>
+        // Acessar a câmera
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const context = canvas.getContext('2d');
+        const snapButton = document.getElementById('snap');
+        const fotoSalva = document.getElementById('fotoSalva');
+        const mapa = document.getElementById('mapa');
+
+        // Solicitar permissão para acessar a câmera e iniciar o vídeo
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                video.srcObject = stream;
+            })
+            .catch(error => {
+                console.error('Erro ao acessar a câmera:', error);
+            });
+
+        // Função para capturar a localização atual
+        function getLocation(callback) {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(callback, error => {
+                    console.error('Erro ao obter a localização:', error);
+                });
+            } else {
+                alert("Geolocalização não é suportada pelo seu navegador.");
+            }
+        }
+
+        // Função para salvar a foto e localização
+        snapButton.addEventListener('click', () => {
+            // Tirar a foto e desenhar no canvas
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Converter o canvas para base64 (imagem)
+            const imageData = canvas.toDataURL('image/jpeg');
+
+            // Obter a localização
+            getLocation((position) => {
+                const latitude = position.coords.latitude;
+                const longitude = position.coords.longitude;
+
+                // Armazenar no localStorage
+                localStorage.setItem('foto', imageData);
+                localStorage.setItem('latitude', latitude);
+                localStorage.setItem('longitude', longitude);
+
+                // Atualizar a interface
+                exibirFotoEMapa(imageData, latitude, longitude);
+            });
+        });
+
+        // Função para exibir a foto e o mapa
+        function exibirFotoEMapa(imageData, latitude, longitude) {
+            // Exibir a última foto salva
+            fotoSalva.src = imageData;
+
+            // Atualizar o iframe do mapa com a latitude e longitude
+            const mapaUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${longitude-0.01}%2C${latitude-0.01}%2C${longitude+0.01}%2C${latitude+0.01}&layer=mapnik&marker=${latitude}%2C${longitude}`;
+            mapa.src = mapaUrl;
+        }
+
+        // Ao carregar a página, exibir os dados salvos (se houver)
+        window.onload = function() {
+            const foto = localStorage.getItem('foto');
+            const latitude = localStorage.getItem('latitude');
+            const longitude = localStorage.getItem('longitude');
+
+            if (foto && latitude && longitude) {
+                exibirFotoEMapa(foto, latitude, longitude);
+            }
+        }
+    </script>
+</body>
 </html>
