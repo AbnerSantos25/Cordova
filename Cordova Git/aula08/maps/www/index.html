@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>OpenStreetMap App</title>
+    <script type="text/javascript" src="cordova.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+      }
+      #map-link {
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #007bff;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        display: inline-block;
+      }
+      #map-link:hover {
+        background-color: #0056b3;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>OpenStreetMap Geolocation</h1>
+    <button id="get-location-btn">Obter localização</button>
+    <div id="status"></div>
+    <a id="map-link" href="#" target="_blank" style="display: none;">Ver no OpenStreetMap</a>
+
+    <script type="text/javascript">
+      document.getElementById('get-location-btn').addEventListener('click', function () {
+        document.getElementById('status').textContent = "Obtendo localização...";
+        
+        // Verifica se a geolocalização é suportada
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(success, error);
+        } else {
+          document.getElementById('status').textContent = "Geolocalização não é suportada pelo dispositivo.";
+        }
+
+        function success(position) {
+          const latitude = position.coords.latitude;
+          const longitude = position.coords.longitude;
+
+          document.getElementById('status').textContent = `Localização obtida: Latitude ${latitude}, Longitude ${longitude}.`;
+
+          // Gerar link para OpenStreetMap
+          const osmLink = `https://www.openstreetmap.org/?mlat=${latitude}&mlon=${longitude}#map=18/${latitude}/${longitude}`;
+          const mapLinkElement = document.getElementById('map-link');
+          mapLinkElement.href = osmLink;
+          mapLinkElement.style.display = 'inline-block';
+        }
+
+        function error() {
+          document.getElementById('status').textContent = "Não foi possível obter a localização.";
+        }
+      });
+    </script>
+  </body>
+</html>
