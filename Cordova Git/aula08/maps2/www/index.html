@@ -27,7 +27,6 @@
       document.getElementById('get-location-btn').addEventListener('click', function () {
         document.getElementById('status').textContent = "Obtendo localização...";
 
-        // Verifica se a geolocalização é suportada
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(success, error);
         } else {
@@ -40,18 +39,15 @@
 
           document.getElementById('status').textContent = `Localização obtida: Latitude ${latitude}, Longitude ${longitude}.`;
 
-          // Cria o iframe com o mapa
           const mapContainer = document.getElementById('map-container');
           const iframe = document.createElement('iframe');
           iframe.width = "100%";
           iframe.height = "350";
           iframe.style.border = "1px solid black";
 
-          // Defina o link do OpenStreetMap com a localização atual
           const osmLink = `https://www.openstreetmap.org/export/embed.html?bbox=${longitude - 0.01}%2C${latitude - 0.01}%2C${longitude + 0.01}%2C${latitude + 0.01}&layer=mapnik&marker=${latitude}%2C${longitude}`;
           iframe.src = osmLink;
 
-          // Limpa o container e insere o novo iframe
           mapContainer.innerHTML = "";
           mapContainer.appendChild(iframe);
         }

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Foto e Localização</title>
+</head>
+<body>
+    <h1>Tirar Foto e Exibir Localização</h1>
+
+    <video id="video" width="320" height="240" autoplay></video>
+    <br>
+    <button id="snap">Tirar Foto</button>
+    <canvas id="canvas" width="320" height="240" style="display: none;"></canvas>
+    <br>
+    
+    <h3>Última Foto Tirada:</h3>
+    <img id="fotoSalva" width="320" height="240" style="border: 1px solid black;">
+    <br><br>
+
+    <h3>Localização da Foto:</h3>
+    <iframe id="mapa" width="425" height="350" style="border: 1px solid black;"></iframe>
+
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const context = canvas.getContext('2d');
+        const snapButton = document.getElementById('snap');
+        const fotoSalva = document.getElementById('fotoSalva');
+        const mapa = document.getElementById('mapa');
+
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                video.srcObject = stream;
+            })
+            .catch(error => {
+                console.error('Erro ao acessar a câmera:', error);
+            });
+
+        function getLocation(callback) {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(callback, error => {
+                    console.error('Erro ao obter a localização:', error);
+                });
+            } else {
+                alert("Geolocalização não é suportada pelo seu navegador.");
+            }
+        }
+
+        snapButton.addEventListener('click', () => {
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            const imageData = canvas.toDataURL('image/jpeg');
+
+            getLocation((position) => {
+                const latitude = position.coords.latitude;
+                const longitude = position.coords.longitude;
+
+                localStorage.setItem('foto', imageData);
+                localStorage.setItem('latitude', latitude);
+                localStorage.setItem('longitude', longitude);
+
+                exibirFotoEMapa(imageData, latitude, longitude);
+            });
+        });
+
+        function exibirFotoEMapa(imageData, latitude, longitude) {
+            fotoSalva.src = imageData;
+
+            const mapaUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${longitude-0.01}%2C${latitude-0.01}%2C${longitude+0.01}%2C${latitude+0.01}&layer=mapnik&marker=${latitude}%2C${longitude}`;
+            mapa.src = mapaUrl;
+        }
+
+        window.onload = function() {
+            const foto = localStorage.getItem('foto');
+            const latitude = localStorage.getItem('latitude');
+            const longitude = localStorage.getItem('longitude');
+
+            if (foto && latitude && longitude) {
+                exibirFotoEMapa(foto, latitude, longitude);
+            }
+        }
+    </script>
+</body>
+</html>
