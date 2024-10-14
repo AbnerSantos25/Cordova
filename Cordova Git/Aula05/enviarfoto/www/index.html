@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Cordova Camera App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+
+        img {
+            max-width: 100%;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Tirar Foto</h1>
+    <button onclick="tirarFoto()">Tirar Foto</button>
+    <img id="lugarfoto" alt="Sua foto aparecerá aqui">
+    
+    <script>
+        function tirarFoto() {
+            navigator.camera.getPicture(onSuccess, onFail, {
+                quality: 50,
+                destinationType: Camera.DestinationType.DATA_URL,
+                sourceType: Camera.PictureSourceType.CAMERA
+            });
+        }
+
+        function onSuccess(imageData) {
+            var image = document.getElementById('lugarfoto');
+            image.src = "data:image/jpeg;base64," + imageData;
+            enviarFoto(imageData); 
+        }
+
+        function onFail(message) {
+            alert('Falha ao tirar foto: ' + message);
+        }
+
+        function enviarFoto(imageData) {
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', 'http://localhost/salvar_foto.php', true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    alert('Foto enviada com sucesso!');
+                } else if (xhr.readyState == 4) {
+                    alert('Falha ao enviar a foto.');
+                }
+            };
+            xhr.send('image=' + encodeURIComponent(imageData));
+        }
+    </script>
+</body>
+</html>
